@@ -41,14 +41,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // try to get the jwt from Authorization header
         String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
+        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
             jwt = bearerToken.substring(7);
         }
 
         // if jwt is not in header, try to get it from cookie
-        if (jwt == null && request.getCookies() != null) {
+        if(jwt == null && request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("jwt".equals(cookie.getName())){
+                if("jwt".equals(cookie.getName())) {
                     jwt = cookie.getValue();
                     break;
                 }
@@ -56,16 +56,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // if we have a jwt and the user is not authenticated
-        if (jwt != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if(jwt != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                //extract username from token
+                // extract username from token
                 String username = jwtUtil.extractUsername(jwt);
 
-                //get user details from db
+                // get user details from db
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                //validate token and create valid authentication if token is vaild
-                if (jwtUtil.validateToken(jwt, userDetails)) {
+                // validate token and create valid authentication if token is valid
+                if(jwtUtil.validateToken(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities()
                     );
@@ -73,22 +73,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // add request details for extra security
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    //set authentication back into security context
+                    // set authentication back into security context
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
-            }catch (JwtException e) {
-                logger.error("JWT validation failed", e);
+            } catch (JwtException e) {
+                logger.error("JWT validation failed.", e);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
         }
 
-        //continue to next filter chain
+        // continue to next filter chain
         filterChain.doFilter(request, response);
     }
-
-
-
-
-
 }
